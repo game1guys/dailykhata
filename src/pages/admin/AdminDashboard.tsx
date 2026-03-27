@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, Users, Activity, ListFilter, IndianRupee, Bell, Plus, Eye, X, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import toast, { Toaster } from 'react-hot-toast';
-import logoImg from '../../assets/logo.png';
 
 const guessLucideIcon = (name: string) => {
   const n = name.toLowerCase();
@@ -114,10 +113,10 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     if (session) {
-      if(activeTab === 'overview') fetchCoreData();
-      if(activeTab === 'users') fetchPaginatedUsers(userPage);
-      if(activeTab === 'notifications') fetchPaginatedNotifs(notifPage);
-      if(activeTab === 'categories') fetchCoreData(); // fallback for categories
+      if (activeTab === 'overview') fetchCoreData();
+      if (activeTab === 'users') fetchPaginatedUsers(userPage);
+      if (activeTab === 'notifications') fetchPaginatedNotifs(notifPage);
+      if (activeTab === 'categories') fetchCoreData(); // fallback for categories
     }
   }, [session, activeTab, userPage, notifPage]);
 
@@ -127,29 +126,29 @@ const AdminDashboard: React.FC = () => {
   };
 
   const fetchPaginatedUsers = async (pageArg: number) => {
-      try {
-         const url = import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/users-paginated?page=${pageArg}&limit=10` : `http://localhost:5001/api/admin/users-paginated?page=${pageArg}&limit=10`;
-         const resp = await fetch(url);
-         if(resp.ok) {
-            const data = await resp.json();
-            setUsers(data.users || []);
-            setUserTotalPages(data.totalPages || 1);
-            setUserTotalRecords(data.total || 0);
-         }
-      } catch(err) { console.error("Pagination Fetch Intercept:", err); }
+    try {
+      const url = import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/users-paginated?page=${pageArg}&limit=10` : `http://localhost:5001/api/admin/users-paginated?page=${pageArg}&limit=10`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const data = await resp.json();
+        setUsers(data.users || []);
+        setUserTotalPages(data.totalPages || 1);
+        setUserTotalRecords(data.total || 0);
+      }
+    } catch (err) { console.error("Pagination Fetch Intercept:", err); }
   };
 
   const fetchPaginatedNotifs = async (pageArg: number) => {
-      try {
-         const url = import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/notifications-paginated?page=${pageArg}&limit=10` : `http://localhost:5001/api/admin/notifications-paginated?page=${pageArg}&limit=10`;
-         const resp = await fetch(url);
-         if(resp.ok) {
-            const data = await resp.json();
-            setNotifList(data.notifications || []);
-            setNotifTotalPages(data.totalPages || 1);
-            setNotifTotalRecords(data.total || 0);
-         }
-      } catch(err) { console.error("Notif Fetch Intercept:", err); }
+    try {
+      const url = import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/notifications-paginated?page=${pageArg}&limit=10` : `http://localhost:5001/api/admin/notifications-paginated?page=${pageArg}&limit=10`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const data = await resp.json();
+        setNotifList(data.notifications || []);
+        setNotifTotalPages(data.totalPages || 1);
+        setNotifTotalRecords(data.total || 0);
+      }
+    } catch (err) { console.error("Notif Fetch Intercept:", err); }
   };
 
   const fetchCoreData = async () => {
@@ -158,12 +157,12 @@ const AdminDashboard: React.FC = () => {
       const coreUrl = import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/core-data` : 'http://localhost:5001/api/admin/core-data';
       const coreResponse = await fetch(coreUrl);
       if (coreResponse.ok) {
-         const { stats: fetchedStats, categories: catData } = await coreResponse.json();
-         setCategories(catData || []);
-         setStats({
-           totalUsers: fetchedStats?.totalUsers || 0,
-           activeSubscriptions: fetchedStats?.activeSubscriptions || 0
-         });
+        const { stats: fetchedStats, categories: catData } = await coreResponse.json();
+        setCategories(catData || []);
+        setStats({
+          totalUsers: fetchedStats?.totalUsers || 0,
+          activeSubscriptions: fetchedStats?.activeSubscriptions || 0
+        });
       }
 
       // Fetch Global Pulse Leaders (Top Spender/Earner metrics) from Node Express pipeline
@@ -463,11 +462,11 @@ const AdminDashboard: React.FC = () => {
 
               {/* Users Pagination */}
               <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-white">
-                 <span className="text-sm font-bold text-slate-500">Showing page {userPage} of {userTotalPages} ({userTotalRecords} Total Nodes)</span>
-                 <div className="flex space-x-2">
-                    <button disabled={userPage === 1} onClick={() => setUserPage(p => p - 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black disabled:opacity-50 hover:bg-slate-50 transition-colors shadow-sm">Previous</button>
-                    <button disabled={userPage === userTotalPages} onClick={() => setUserPage(p => p + 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black disabled:opacity-50 hover:bg-slate-50 transition-colors shadow-sm">Next</button>
-                 </div>
+                <span className="text-sm font-bold text-slate-500">Showing page {userPage} of {userTotalPages} ({userTotalRecords} Total Nodes)</span>
+                <div className="flex space-x-2">
+                  <button disabled={userPage === 1} onClick={() => setUserPage(p => p - 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black disabled:opacity-50 hover:bg-slate-50 transition-colors shadow-sm">Previous</button>
+                  <button disabled={userPage === userTotalPages} onClick={() => setUserPage(p => p + 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black disabled:opacity-50 hover:bg-slate-50 transition-colors shadow-sm">Next</button>
+                </div>
               </div>
 
             </div>
@@ -548,8 +547,8 @@ const AdminDashboard: React.FC = () => {
               {/* Form Container */}
               <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60 relative overflow-hidden h-fit">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] -z-10 pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
-                
-                <h3 className="text-xl font-black mb-6 flex items-center"><Bell className="text-emerald-500 mr-2" size={20}/> Compose Transmission</h3>
+
+                <h3 className="text-xl font-black mb-6 flex items-center"><Bell className="text-emerald-500 mr-2" size={20} /> Compose Transmission</h3>
                 <form onSubmit={sendNotification} className="relative z-10">
                   <div className="space-y-5">
                     <div>
@@ -578,7 +577,7 @@ const AdminDashboard: React.FC = () => {
                       <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Message Payload</label>
                       <textarea value={notifMessage} onChange={e => setNotifMessage(e.target.value)} required rows={3} placeholder="Construct the alert payload..." className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-[1.2rem] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-medium text-slate-600 resize-none"></textarea>
                     </div>
-                    
+
                     <div>
                       <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Featured Image Upload <span className="text-emerald-500 font-normal normal-case">(Optional)</span></label>
                       <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-[1.2rem] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-medium text-slate-600 file:cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[12px] file:font-black file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200" />
@@ -603,44 +602,44 @@ const AdminDashboard: React.FC = () => {
                   <h3 className="font-black text-xl text-slate-900">Transmission History</h3>
                   <p className="text-[13px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Global Broadcast Logs</p>
                 </div>
-                
+
                 <div className="divide-y divide-slate-100 flex-1 overflow-y-auto bg-white">
-                   {notifList.map((n: any, idx) => (
-                      <div key={idx} className="p-6 hover:bg-slate-50/50 transition-all flex gap-5 group">
-                         {n.image_url ? (
-                           <img src={n.image_url} className="w-16 h-16 rounded-2xl object-cover border border-slate-200 shadow-sm" />
-                         ) : (
-                           <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-400 group-hover:bg-slate-200 transition-colors">
-                             <Bell size={24} strokeWidth={2.5}/>
-                           </div>
-                         )}
-                         <div className="flex-1 min-w-0">
-                           <div className="flex justify-between items-start gap-4">
-                             <h4 className="font-black text-slate-900 text-base truncate pr-2">{n.title}</h4>
-                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-2.5 py-1.5 bg-white border border-slate-200 rounded-md shadow-sm whitespace-nowrap">
-                               Target: {n.target_tier.replace('premium_', 'PREMIUM ').toUpperCase()}
-                             </span>
-                           </div>
-                           <p className="text-sm text-slate-600 font-medium mt-1.5 leading-snug line-clamp-2">{n.message}</p>
-                           <p className="text-[11px] font-bold text-slate-400 mt-3 flex items-center"><Activity size={12} className="mr-1.5"/> Dep: {new Date(n.created_at).toLocaleString()}</p>
-                         </div>
+                  {notifList.map((n: any, idx) => (
+                    <div key={idx} className="p-6 hover:bg-slate-50/50 transition-all flex gap-5 group">
+                      {n.image_url ? (
+                        <img src={n.image_url} className="w-16 h-16 rounded-2xl object-cover border border-slate-200 shadow-sm" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-400 group-hover:bg-slate-200 transition-colors">
+                          <Bell size={24} strokeWidth={2.5} />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-4">
+                          <h4 className="font-black text-slate-900 text-base truncate pr-2">{n.title}</h4>
+                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-2.5 py-1.5 bg-white border border-slate-200 rounded-md shadow-sm whitespace-nowrap">
+                            Target: {n.target_tier.replace('premium_', 'PREMIUM ').toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-600 font-medium mt-1.5 leading-snug line-clamp-2">{n.message}</p>
+                        <p className="text-[11px] font-bold text-slate-400 mt-3 flex items-center"><Activity size={12} className="mr-1.5" /> Dep: {new Date(n.created_at).toLocaleString()}</p>
                       </div>
-                   ))}
-                   {notifList.length === 0 && (
-                     <div className="p-16 text-center text-slate-400 font-bold flex flex-col items-center">
-                        <Activity size={48} className="text-slate-200 mb-4" />
-                        No Broadcast logs recorded.
-                     </div>
-                   )}
+                    </div>
+                  ))}
+                  {notifList.length === 0 && (
+                    <div className="p-16 text-center text-slate-400 font-bold flex flex-col items-center">
+                      <Activity size={48} className="text-slate-200 mb-4" />
+                      No Broadcast logs recorded.
+                    </div>
+                  )}
                 </div>
-                
+
                 {/* Notification Pagination */}
                 <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-                   <span className="text-sm font-bold text-slate-500">Page {notifPage} of {notifTotalPages} <span className="text-[10px] text-slate-400 ml-1">({notifTotalRecords} Total)</span></span>
-                   <div className="flex space-x-2">
-                      <button disabled={notifPage === 1} onClick={() => setNotifPage(p => p - 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black disabled:opacity-50 hover:bg-white bg-transparent transition-colors shadow-sm disabled:shadow-none">Prev</button>
-                      <button disabled={notifPage === notifTotalPages} onClick={() => setNotifPage(p => p + 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black hover:bg-white bg-transparent transition-colors shadow-sm disabled:opacity-50 disabled:shadow-none">Next</button>
-                   </div>
+                  <span className="text-sm font-bold text-slate-500">Page {notifPage} of {notifTotalPages} <span className="text-[10px] text-slate-400 ml-1">({notifTotalRecords} Total)</span></span>
+                  <div className="flex space-x-2">
+                    <button disabled={notifPage === 1} onClick={() => setNotifPage(p => p - 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black disabled:opacity-50 hover:bg-white bg-transparent transition-colors shadow-sm disabled:shadow-none">Prev</button>
+                    <button disabled={notifPage === notifTotalPages} onClick={() => setNotifPage(p => p + 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black hover:bg-white bg-transparent transition-colors shadow-sm disabled:opacity-50 disabled:shadow-none">Next</button>
+                  </div>
                 </div>
               </div>
             </div>
