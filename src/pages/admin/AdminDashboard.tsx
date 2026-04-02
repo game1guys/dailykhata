@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Activity, ListFilter, IndianRupee, Bell, Plus, Eye, X, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { LogOut, Users, Activity, ListFilter, IndianRupee, Bell, Plus, Eye, X, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Tag } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -83,6 +83,72 @@ const AdminDashboard: React.FC = () => {
   const [isProvisioning, setIsProvisioning] = useState(false);
   const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
 
+  const [promos, setPromos] = useState<any[]>([]);
+  const [newPromoCode, setNewPromoCode] = useState('');
+  const [newPromoPercent, setNewPromoPercent] = useState('15');
+  const [newPromoMaxUses, setNewPromoMaxUses] = useState('');
+  const [newPromoExpires, setNewPromoExpires] = useState('');
+  const [promoSaving, setPromoSaving] = useState(false);
+
+  const backendBase = () =>
+    import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api/admin` : 'http://localhost:5001/api/admin';
+
+  const fetchPromos = async () => {
+    try {
+      const resp = await fetch(`${backendBase()}/promo-codes`);
+      if (resp.ok) {
+        const data = await resp.json();
+        setPromos(data.promos || []);
+      }
+    } catch (err) {
+      console.error('Promo list error', err);
+    }
+  };
+
+  const createPromo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPromoSaving(true);
+    try {
+      const resp = await fetch(`${backendBase()}/promo-codes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: newPromoCode,
+          percent_off: Number(newPromoPercent),
+          max_uses: newPromoMaxUses.trim() ? Number(newPromoMaxUses) : null,
+          expires_at: newPromoExpires.trim() ? newPromoExpires : null,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed');
+      toast.success(`Promo ${data.promo?.code || ''} created`);
+      setNewPromoCode('');
+      setNewPromoMaxUses('');
+      setNewPromoExpires('');
+      fetchPromos();
+    } catch (err: any) {
+      toast.error(err.message || 'Could not create promo');
+    } finally {
+      setPromoSaving(false);
+    }
+  };
+
+  const togglePromoActive = async (p: any) => {
+    try {
+      const resp = await fetch(`${backendBase()}/promo-codes/${p.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !p.is_active }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed');
+      toast.success(p.is_active ? 'Promo deactivated' : 'Promo activated');
+      fetchPromos();
+    } catch (err: any) {
+      toast.error(err.message || 'Update failed');
+    }
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -117,6 +183,7 @@ const AdminDashboard: React.FC = () => {
       if (activeTab === 'users') fetchPaginatedUsers(userPage);
       if (activeTab === 'notifications') fetchPaginatedNotifs(notifPage);
       if (activeTab === 'categories') fetchCoreData(); // fallback for categories
+      if (activeTab === 'promos') fetchPromos();
     }
   }, [session, activeTab, userPage, notifPage]);
 
@@ -220,7 +287,7 @@ const AdminDashboard: React.FC = () => {
 
   const sendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: any = {
+    const payload: Record<string, string> = {
       title: notifTitle,
       message: notifMessage,
       target_tier: notifTarget,
@@ -229,16 +296,33 @@ const AdminDashboard: React.FC = () => {
       payload.image_url = notifImage.trim();
     }
 
-    const { error } = await supabase.from('notifications').insert(payload);
-    if (!error) {
-      toast.success(`Notification Broadcasted to ${notifTarget.toUpperCase()} tier!`);
+    try {
+      const resp = await fetch(`${backendBase()}/notifications/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data.error || 'Broadcast failed');
+      }
+      const sent = data.push?.successCount ?? 0;
+      const failed = data.push?.failureCount ?? 0;
+      const eligible = data.eligible_devices ?? 0;
+      const hint = data.hint as string | undefined;
+      toast.success(
+        `Saved & sent: ${sent} delivered${failed ? `, ${failed} failed` : ''} (${eligible} devices matched segment).`
+      );
+      if (hint) {
+        toast(hint, { duration: 9000 });
+      }
       setNotifTitle('');
       setNotifMessage('');
       setNotifImage('');
       setNotifPage(1);
       fetchPaginatedNotifs(1);
-    } else {
-      toast.error('Failed to send push notification.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send push notification.');
     }
   };
 
@@ -319,6 +403,9 @@ const AdminDashboard: React.FC = () => {
           </button>
           <button onClick={() => setActiveTab('notifications')} className={`w-full flex items-center px-4 py-3.5 text-sm font-bold rounded-xl transition-all ${activeTab === 'notifications' ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <Bell className="mr-3" size={18} /> Push Notifications
+          </button>
+          <button onClick={() => setActiveTab('promos')} className={`w-full flex items-center px-4 py-3.5 text-sm font-bold rounded-xl transition-all ${activeTab === 'promos' ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
+            <Tag className="mr-3" size={18} /> Promo codes
           </button>
         </nav>
         <div className="p-4 border-t border-gray-50 bg-slate-50/50">
@@ -640,6 +727,107 @@ const AdminDashboard: React.FC = () => {
                     <button disabled={notifPage === 1} onClick={() => setNotifPage(p => p - 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black disabled:opacity-50 hover:bg-white bg-transparent transition-colors shadow-sm disabled:shadow-none">Prev</button>
                     <button disabled={notifPage === notifTotalPages} onClick={() => setNotifPage(p => p + 1)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-[13px] font-black hover:bg-white bg-transparent transition-colors shadow-sm disabled:opacity-50 disabled:shadow-none">Next</button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'promos' && (
+          <div className="animate-in fade-in duration-300 max-w-5xl">
+            <header className="mb-8">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Subscription promo codes</h1>
+              <p className="text-slate-500 mt-1 font-medium">
+                Create percentage discounts for Razorpay checkout. Users enter the code in the mobile app before paying. Run the SQL in{' '}
+                <code className="text-xs bg-slate-100 px-1 rounded">backend/sql/promo_codes.sql</code> once on Supabase if the table is missing.
+              </p>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <form onSubmit={createPromo} className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200/60 space-y-5 h-fit">
+                <h3 className="text-xl font-black flex items-center gap-2">
+                  <Tag className="text-indigo-600" size={22} /> New promo
+                </h3>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Code (stored uppercase)</label>
+                  <input
+                    value={newPromoCode}
+                    onChange={(e) => setNewPromoCode(e.target.value)}
+                    required
+                    className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold uppercase"
+                    placeholder="WELCOME15"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Discount % (1–100)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={newPromoPercent}
+                    onChange={(e) => setNewPromoPercent(e.target.value)}
+                    required
+                    className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Max redemptions (empty = unlimited)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={newPromoMaxUses}
+                    onChange={(e) => setNewPromoMaxUses(e.target.value)}
+                    className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl"
+                    placeholder="e.g. 100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Expires (optional)</label>
+                  <input
+                    type="datetime-local"
+                    value={newPromoExpires}
+                    onChange={(e) => setNewPromoExpires(e.target.value)}
+                    className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={promoSaving}
+                  className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black disabled:opacity-50 hover:bg-indigo-500 transition-colors"
+                >
+                  {promoSaving ? 'Saving…' : 'Create promo code'}
+                </button>
+              </form>
+
+              <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 overflow-hidden">
+                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80">
+                  <h3 className="font-black text-lg">Active & past codes</h3>
+                </div>
+                <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
+                  {promos.map((p) => (
+                    <div key={p.id} className="p-5 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-mono font-black text-lg text-slate-900">{p.code}</p>
+                        <p className="text-sm text-slate-500 font-medium mt-1">
+                          {p.percent_off}% off · used {p.used_count ?? 0}
+                          {p.max_uses != null ? ` / ${p.max_uses}` : ' · unlimited uses'}
+                          {p.expires_at ? ` · expires ${new Date(p.expires_at).toLocaleString()}` : ''}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => togglePromoActive(p)}
+                        className={`px-4 py-2 rounded-xl text-sm font-black ${
+                          p.is_active ? 'bg-amber-100 text-amber-900 hover:bg-amber-200' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                        }`}
+                      >
+                        {p.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
+                  ))}
+                  {promos.length === 0 && (
+                    <p className="p-10 text-center text-slate-400 font-medium">No promo codes yet — or the database table is not created.</p>
+                  )}
                 </div>
               </div>
             </div>

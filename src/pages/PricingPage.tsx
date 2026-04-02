@@ -16,7 +16,7 @@ const plans = [
       { text: 'Daily income/expense entry', included: true },
       { text: 'Basic categories (Food, Travel)', included: true },
       { text: 'Simple monthly summary', included: true },
-      { text: 'Limited entries (≈ 1000/mo)', included: true },
+      { text: 'Limited entries (≈ 100/mo)', included: true },
       { text: 'Limited Udhar (2-3 parties)', included: true },
       { text: 'Ads included', falseText: true, included: false },
       { text: 'Cloud Backup & Sync', included: false },
@@ -62,7 +62,7 @@ const plans = [
   },
   {
     name: 'Premium Lifetime',
-    price: '₹399',
+    price: '₹699',
     cycle: '/once',
     icon: <Infinity className="text-emerald-500" size={24} />,
     color: 'from-emerald-50 to-teal-100',
